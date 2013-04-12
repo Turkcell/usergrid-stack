@@ -40,3 +40,4 @@ core/src/main/java/QueryFilter.tokens
 /release.properties
 *.sfx*
 *.db
+nb-configuration.xml

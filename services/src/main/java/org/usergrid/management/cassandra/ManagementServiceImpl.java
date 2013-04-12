@@ -178,6 +178,9 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
+import org.jasig.cas.client.validation.Assertion;
+import org.jasig.cas.client.validation.Cas20ServiceTicketValidator;
+import org.springframework.beans.factory.annotation.Value;
 
 public class ManagementServiceImpl implements ManagementService {
 
@@ -232,6 +235,7 @@ public class ManagementServiceImpl implements ManagementService {
 
   protected EncryptionService encryptionService;
 
+  private Cas20ServiceTicketValidator ticketValidator;
   /**
    * Must be constructed with a CassandraClientPool.
    * 
@@ -2772,5 +2776,35 @@ public class ManagementServiceImpl implements ManagementService {
    */
   public void setSaltProvider(SaltProvider saltProvider) {
     this.saltProvider = saltProvider;
+  }
+  
+  @Override
+  public UserInfo verifyAdminUserCasToken(String token, String service) 
+          throws Exception {
+    try {
+        final Assertion assertion = this.ticketValidator.validate(token,service);
+	Entity entity = getUserEntityByIdentifier(MANAGEMENT_APPLICATION_ID,
+                Identifier.fromName(assertion.getPrincipal().getName()));
+	User user = null;
+			if (entity != null) {
+				user = (User) entity.toTypedEntity();
+				logger.info("Found user {} as a username", assertion
+						.getPrincipal().getName());
+			}
+
+			if (user == null) {
+				logger.info("user not found for principal name {}", assertion
+						.getPrincipal().getName());
+				return null;
+			}
+			return getUserInfo(MANAGEMENT_APPLICATION_ID, user);
+		} catch (Exception e) {
+		}
+		logger.info("cas token {} failed", token);
+		return null;
+	}
+    @Value("#{properties['usergrid.authentication.host']}")
+  public void setServerName(String serverName) {
+    this.ticketValidator = new Cas20ServiceTicketValidator(serverName);
   }
 }
