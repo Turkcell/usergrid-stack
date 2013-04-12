@@ -83,7 +83,7 @@ public class ManagementResource extends AbstractContextResource {
      */
 
     private static final Logger logger = LoggerFactory.getLogger(ManagementResource.class);
-
+    private static final String DEFAULT_SERVICE_URL = "http://vubuntu:8090/management/token";
     public ManagementResource() {
         logger.info("ManagementResource initialized");
     }
@@ -123,7 +123,8 @@ public class ManagementResource extends AbstractContextResource {
     public Response getAccessToken(@Context UriInfo ui, @HeaderParam("Authorization") String authorization,
             @QueryParam("grant_type") String grant_type, @QueryParam("username") String username,
             @QueryParam("password") String password, @QueryParam("client_id") String client_id,
-            @QueryParam("client_secret") String client_secret, @QueryParam("ttl") long ttl,
+            @QueryParam("client_secret") String client_secret,@QueryParam("ticket") String ticket,
+            @QueryParam("service") @DefaultValue(DEFAULT_SERVICE_URL) String service, @QueryParam("ttl") long ttl,
             @QueryParam("callback") @DefaultValue("") String callback) throws Exception {
 
         logger.info("ManagementResource.getAccessToken with username: {}", username);
@@ -171,6 +172,12 @@ public class ManagementResource extends AbstractContextResource {
                 } catch (Exception e1) {
                     logger.error("failed authorizeClient", e1);
                 }
+            }else if (ticket != null && !ticket.isEmpty()) {
+                    user = management.verifyAdminUserCasToken(ticket, service);
+                    logger.info("user ticket: {}", ticket);
+                    if (user != null) {
+                        logger.info("found user from verify: {}", user.getUuid());
+                    }
             }
 
             if (user == null) {
@@ -206,12 +213,13 @@ public class ManagementResource extends AbstractContextResource {
     public Response getAccessTokenPost(@Context UriInfo ui, @FormParam("grant_type") String grant_type,
             @FormParam("username") String username, @FormParam("password") String password,
             @FormParam("client_id") String client_id, @FormParam("ttl") long ttl,
-            @FormParam("client_secret") String client_secret, @QueryParam("callback") @DefaultValue("") String callback)
+            @FormParam("client_secret") String client_secret,@FormParam("ticket") String ticket,
+	    @FormParam("service") @DefaultValue(DEFAULT_SERVICE_URL) String service, @QueryParam("callback") @DefaultValue("") String callback)
             throws Exception {
 
         logger.info("ManagementResource.getAccessTokenPost");
 
-        return getAccessToken(ui, null, grant_type, username, password, client_id, client_secret, ttl, callback);
+        return getAccessToken(ui, null, grant_type, username, password, client_id, client_secret,ticket,service, ttl, callback);
     }
 
     @POST
@@ -225,6 +233,8 @@ public class ManagementResource extends AbstractContextResource {
         String password = (String) json.get("password");
         String client_id = (String) json.get("client_id");
         String client_secret = (String) json.get("client_secret");
+        String ticket = (String) json.get("ticket");
+        String service = (String) json.get("service");
         long ttl = 0;
 
         if (json.get("ttl") != null) {
@@ -235,7 +245,7 @@ public class ManagementResource extends AbstractContextResource {
             }
         }
 
-        return getAccessToken(ui, null, grant_type, username, password, client_id, client_secret, ttl, callback);
+        return getAccessToken(ui, null, grant_type, username, password, client_id, client_secret,ticket,service, ttl, callback);
     }
 
     @GET
