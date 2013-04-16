@@ -16,42 +16,43 @@
 package org.usergrid.dashboard.web;
 
 import java.util.List;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+
 import org.usergrid.dashboard.domain.UsergridApplicationProperties;
 import org.usergrid.dashboard.domain.UsergridCounter;
 import org.usergrid.dashboard.service.DashboardService;
 
 /**
- *
+ * 
  * @author capacman
  */
 @Path("/dashboard")
-@Component
-@Scope("singleton")
-@Produces({MediaType.APPLICATION_JSON, "application/javascript",
-    "application/x-javascript", "text/ecmascript",
-    "application/ecmascript", "text/jscript"})
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
+		"application/x-javascript", "text/ecmascript",
+		"application/ecmascript", "text/jscript" })
 public class DashboardResource {
 
-    @Autowired
-    private DashboardService dashboardService;
+	private DashboardService dashboardService;
 
-    @GET
-    @Path("counters")
-    public List<UsergridCounter> getDashboardCounters() {
-        return dashboardService.getDashboardCounters();
-    }
+	@GET
+	@Path("counters")
+	public List<UsergridCounter> getDashboardCounters() {
+		return dashboardService.getDashboardCounters();
+	}
 
-    @GET
-    @Path("appsProperties")
-    public List<UsergridApplicationProperties> getApplicationProperties(@QueryParam("start") Integer start, @QueryParam("start") Integer end) {
-        return dashboardService.getDashboardCountersOrderByCount(start, end);
-    }
+	@GET
+	@Path("appsProperties")
+	public List<UsergridApplicationProperties> getApplicationProperties(
+			@QueryParam("start") Integer start, @QueryParam("start") Integer end) {
+		return dashboardService.getDashboardCountersOrderByCount(start, end);
+	}
+
+	public void setDashboardService(DashboardService dashboardService) {
+		this.dashboardService = dashboardService;
+	}
 }
