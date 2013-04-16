@@ -54,7 +54,7 @@
         </aop:aspect>
         <aop:aspect id="createUserParticipant" ref="createUserAspect">
             <aop:pointcut
-                expression="execution(* org.usergrid.persistence.cassandra.EntityManagerImpl.create(..))"
+                expression="execution(* org.usergrid.persistence.cassandra.EntityManagerImpl.createItemInCollection(..))"
                 id="createUserPointcut" />
             <aop:around pointcut-ref="createUserPointcut"
                         method="applyTrace" />
