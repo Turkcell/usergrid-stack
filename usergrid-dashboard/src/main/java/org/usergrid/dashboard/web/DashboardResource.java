@@ -23,6 +23,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.usergrid.dashboard.domain.UsergridApplicationProperties;
 import org.usergrid.dashboard.domain.UsergridCounter;
 import org.usergrid.dashboard.service.DashboardService;
@@ -32,12 +35,18 @@ import org.usergrid.dashboard.service.DashboardService;
  * @author capacman
  */
 @Path("/dashboard")
+@Component
+@Scope("singleton")
 @Produces({ MediaType.APPLICATION_JSON, "application/javascript",
 		"application/x-javascript", "text/ecmascript",
 		"application/ecmascript", "text/jscript" })
 public class DashboardResource {
 
 	private DashboardService dashboardService;
+
+	public DashboardResource() {
+		(new Exception()).printStackTrace();
+	}
 
 	@GET
 	@Path("counters")
@@ -52,6 +61,7 @@ public class DashboardResource {
 		return dashboardService.getDashboardCountersOrderByCount(start, end);
 	}
 
+	@Autowired
 	public void setDashboardService(DashboardService dashboardService) {
 		this.dashboardService = dashboardService;
 	}
