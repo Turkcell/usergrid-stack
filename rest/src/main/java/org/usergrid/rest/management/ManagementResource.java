@@ -50,6 +50,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.codec.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.usergrid.management.UserInfo;
@@ -67,8 +68,9 @@ import org.usergrid.security.shiro.utils.SubjectUtils;
 @Path("/management")
 @Component
 @Scope("singleton")
-@Produces({ MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
-        "application/ecmascript", "text/jscript" })
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
+		"application/x-javascript", "text/ecmascript",
+		"application/ecmascript", "text/jscript" })
 public class ManagementResource extends AbstractContextResource {
 
     /*-
@@ -84,7 +86,8 @@ public class ManagementResource extends AbstractContextResource {
      */
 
     private static final Logger logger = LoggerFactory.getLogger(ManagementResource.class);
-    private static final String DEFAULT_SERVICE_URL = "http://vubuntu:8090/management/token";
+    private String casDefaultService = "http://vubuntu:8090/management/token";
+
     public ManagementResource() {
         logger.info("ManagementResource initialized");
     }
@@ -125,7 +128,7 @@ public class ManagementResource extends AbstractContextResource {
                 @QueryParam("grant_type") String grant_type, @QueryParam("username") String username,
                 @QueryParam("password") String password, @QueryParam("client_id") String client_id,
                 @QueryParam("client_secret") String client_secret,@QueryParam("ticket") String ticket,
-            @QueryParam("service") @DefaultValue(DEFAULT_SERVICE_URL) String service, @QueryParam("ttl") long ttl,
+            @QueryParam("service") String service, @QueryParam("ttl") long ttl,
                 @QueryParam("access_token") String access_token,
                 @QueryParam("callback") @DefaultValue("") String callback) throws Exception {
       return getAccessTokenInternal(ui,authorization,grant_type,username,password,client_id,client_secret,ticket,service,ttl,callback, false);
@@ -137,7 +140,7 @@ public class ManagementResource extends AbstractContextResource {
               @QueryParam("grant_type") String grant_type, @QueryParam("username") String username,
               @QueryParam("password") String password, @QueryParam("client_id") String client_id,
               @QueryParam("client_secret") String client_secret,@QueryParam("ticket") String ticket,
-            @QueryParam("service") @DefaultValue(DEFAULT_SERVICE_URL) String service, @QueryParam("ttl") long ttl,
+            @QueryParam("service") String service, @QueryParam("ttl") long ttl,
               @QueryParam("callback") @DefaultValue("") String callback) throws Exception {
       return getAccessTokenInternal(ui,authorization,grant_type,username,password,client_id,client_secret,ticket,service,ttl,callback, true);
     }
@@ -195,7 +198,9 @@ public class ManagementResource extends AbstractContextResource {
               logger.error("failed authorizeClient", e1);
             }
           } else if (ticket != null && !ticket.isEmpty()) {
-                    user = management.verifyAdminUserCasToken(ticket, service);
+                    user = service == null ? management.verifyAdminUserCasToken(
+						ticket, casDefaultService) : management
+						.verifyAdminUserCasToken(ticket, service);
                     logger.info("user ticket: {}", ticket);
                     if (user != null) {
                         logger.info("found user from verify: {}", user.getUuid());
@@ -244,7 +249,7 @@ public class ManagementResource extends AbstractContextResource {
             @FormParam("username") String username, @FormParam("password") String password,
             @FormParam("client_id") String client_id, @FormParam("ttl") long ttl,
             @FormParam("client_secret") String client_secret,@FormParam("ticket") String ticket,
-	    @FormParam("service") @DefaultValue(DEFAULT_SERVICE_URL) String service, @QueryParam("callback") @DefaultValue("") String callback)
+	    @FormParam("service") String service, @QueryParam("callback") @DefaultValue("") String callback)
             throws Exception {
 
         logger.info("ManagementResource.getAccessTokenPost");
@@ -367,6 +372,11 @@ public class ManagementResource extends AbstractContextResource {
 
     public String getState() {
         return state;
+    }
+    
+    @Value("#{properties['usergrid.authentication.service']}")
+    public void setCasDefaultService(String casDefaultService) {
+	this.casDefaultService = casDefaultService;
     }
 
 }
