@@ -70,12 +70,12 @@ public class CORSUtils {
 		}
 
 		boolean origin_sent = false;
-		if (getOrigin(request) != null) {
+		if (request.getHeader(ORIGIN_HEADER) != null) {
 			@SuppressWarnings("unchecked")
 			Enumeration<String> e = request.getHeaders(ORIGIN_HEADER);
 			while (e.hasMoreElements()) {
 				String value = e.nextElement();
-				if (value != null) {
+				if (value != null && !"null".equalsIgnoreCase(value)) {
           origin_sent = true;
           response.addHeader(ACCESS_CONTROL_ALLOW_ORIGIN, value);
 				}
@@ -119,9 +119,9 @@ public class CORSUtils {
 		}
 
 		boolean origin_sent = false;
-		if (getOrigin(request)!=null) {
+		if (request.getRequestHeaders().containsKey(ORIGIN_HEADER)) {
 			for (String value : request.getRequestHeaders().get(ORIGIN_HEADER)) {
-        if (value != null) {
+        if (value != null && !"null".equalsIgnoreCase(value)) {
           origin_sent = true;
           response.getHttpHeaders().add(ACCESS_CONTROL_ALLOW_ORIGIN, value);
 				}
