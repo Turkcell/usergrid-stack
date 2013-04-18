@@ -70,7 +70,7 @@ public class CORSUtils {
 		}
 
 		boolean origin_sent = false;
-		if (request.getHeader(ORIGIN_HEADER) != null) {
+		if (getOrigin(request) != null) {
 			@SuppressWarnings("unchecked")
 			Enumeration<String> e = request.getHeaders(ORIGIN_HEADER);
 			while (e.hasMoreElements()) {
@@ -119,7 +119,7 @@ public class CORSUtils {
 		}
 
 		boolean origin_sent = false;
-		if (request.getRequestHeaders().containsKey(ORIGIN_HEADER)) {
+		if (getOrigin(request)!=null) {
 			for (String value : request.getRequestHeaders().get(ORIGIN_HEADER)) {
         if (value != null) {
           origin_sent = true;
