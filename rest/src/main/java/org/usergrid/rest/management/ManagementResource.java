@@ -174,7 +174,7 @@ public class ManagementResource extends AbstractContextResource {
           // do checking for different grant types
           if (GrantType.PASSWORD.toString().equals(grant_type)) {
             try {
-              user = management.verifyAdminUserPasswordCredentials(username, password);
+              user = management.verifyAdminUserCasCredentials(username, password);
               if (user != null) {
                 logger.info("found user from verify: {}", user.getUuid());
               }

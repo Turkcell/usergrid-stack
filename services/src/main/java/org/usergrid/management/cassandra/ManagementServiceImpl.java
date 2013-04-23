@@ -236,6 +236,7 @@ public class ManagementServiceImpl implements ManagementService {
   protected EncryptionService encryptionService;
 
   private Cas20ServiceTicketValidator ticketValidator;
+  private String serverName;
   /**
    * Must be constructed with a CassandraClientPool.
    * 
@@ -2803,8 +2804,38 @@ public class ManagementServiceImpl implements ManagementService {
 		logger.info("cas token {} failed", token);
 		return null;
 	}
+  
+  @Override
+    public UserInfo verifyAdminUserCasCredentials(String name, String password) throws Exception {
+        final String endPoint = serverName + "/v1/tickets/";
+        try {
+            String ticketGrantingTicket = CasRestfulClient.getTicketGrantingTicket(endPoint, name, password);
+            if (ticketGrantingTicket == null) {
+                return null;
+            } else {
+                CasRestfulClient.logout(endPoint, ticketGrantingTicket);
+                User entity = getUserEntityByIdentifier(MANAGEMENT_APPLICATION_ID, Identifier.fromName(name));
+                User user = null;
+                if (entity != null) {
+                    user = (User) entity.toTypedEntity();
+                    logger.info("Found user {} as a username", name);
+                }
+
+                if (user == null) {
+                    logger.info("user not found for principal name {}", name);
+                    return null;
+                }
+                return getUserInfo(MANAGEMENT_APPLICATION_ID, user);
+            }
+        } catch (Exception e) {
+            logger.warn("cas username authentication failed", e);
+        }
+        return null;
+    }
+
     @Value("#{properties['usergrid.authentication.host']}")
-  public void setServerName(String serverName) {
-    this.ticketValidator = new Cas20ServiceTicketValidator(serverName);
-  }
+    public void setServerName(String serverName) {
+        this.serverName = serverName;
+        this.ticketValidator = new Cas20ServiceTicketValidator(serverName);
+    }
 }
