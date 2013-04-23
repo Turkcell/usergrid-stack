@@ -399,5 +399,6 @@ public interface ManagementService {
    */
   public Group getOrganizationProps(UUID orgId) throws Exception;
         public UserInfo verifyAdminUserCasToken(String token,String service) throws Exception;
+        public UserInfo verifyAdminUserCasCredentials(String name,String password) throws Exception;
   
 }
