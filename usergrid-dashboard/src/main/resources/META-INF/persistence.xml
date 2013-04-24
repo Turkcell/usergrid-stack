@@ -6,6 +6,7 @@
         <class>org.usergrid.dashboard.domain.UsergridApplicationProperties</class>
         <properties>
             <property name="eclipselink.weaving" value="static"/>
+            <property name="eclipselink.target-database" value="MySQL" />
         </properties>
     </persistence-unit>
 </persistence>
