@@ -223,7 +223,7 @@ public class ManagementServiceImpl implements ManagementService {
     protected MailUtils mailUtils;
     protected EncryptionService encryptionService;
     private Cas20ServiceTicketValidator ticketValidator;
-    private String serverName;
+    private String tgtEndpoint;
 
     /**
      * Must be constructed with a CassandraClientPool.
@@ -2786,13 +2786,12 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public UserInfo verifyAdminUserCasCredentials(String name, String password) throws Exception {
-        final String endPoint = serverName + "/v1/tickets/";
         try {
-            String ticketGrantingTicket = CasRestfulClient.getTicketGrantingTicket(endPoint, name, password);
+            String ticketGrantingTicket = CasRestfulClient.getTicketGrantingTicket(tgtEndpoint, name, password);
             if (ticketGrantingTicket == null) {
                 return null;
             } else {
-                CasRestfulClient.logout(endPoint, ticketGrantingTicket);
+                CasRestfulClient.logout(tgtEndpoint, ticketGrantingTicket);
                 User entity = getUserEntityByIdentifier(MANAGEMENT_APPLICATION_ID, Identifier.fromName(name));
                 User user = null;
                 if (entity != null) {
@@ -2814,7 +2813,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Value("#{properties['usergrid.authentication.host']}")
     public void setServerName(String serverName) {
-        this.serverName = serverName;
+        this.tgtEndpoint = serverName.endsWith("/") ? serverName + "v1/tickets/" : serverName + "/v1/tickets/";
         this.ticketValidator = new Cas20ServiceTicketValidator(serverName);
     }
 }
