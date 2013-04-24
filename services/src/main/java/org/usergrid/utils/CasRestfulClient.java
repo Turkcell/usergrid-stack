@@ -124,7 +124,8 @@ public class CasRestfulClient {
 
     static public void logout(String server, String ticketGrantingTicket) {
         HttpClient client = new HttpClient();
-        DeleteMethod method = new DeleteMethod(server + "/" + ticketGrantingTicket);
+        final String endPoint = server + ticketGrantingTicket;
+        DeleteMethod method = new DeleteMethod(endPoint);
         try {
             client.executeMethod(method);
             String response = method.getResponseBodyAsString();
