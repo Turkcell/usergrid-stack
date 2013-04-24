@@ -1912,9 +1912,9 @@ public class ManagementServiceImpl implements ManagementService {
   @Override
   public void startAdminUserActivationFlow(UserInfo user) throws Exception {
     if (user.isActivated()) {
-      sendAdminUserConfirmationEmail(user);
+            /*sendAdminUserConfirmationEmail(user);
       sendAdminUserActivatedEmail(user);
-      sendSysAdminNewAdminActivatedNotificationEmail(user);
+            sendSysAdminNewAdminActivatedNotificationEmail(user);*/
     } else {
       if (newAdminUsersRequireConfirmation()) {
         sendAdminUserConfirmationEmail(user);
