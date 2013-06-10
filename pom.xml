@@ -78,6 +78,7 @@
 		<module>tools</module>
 		<module>mongo-emulator</module>
 		<module>websocket</module>
+                <module>usergrid-dashboard</module>
 		<module>rest</module>
 		<module>standalone</module>
 		<module>launcher</module>

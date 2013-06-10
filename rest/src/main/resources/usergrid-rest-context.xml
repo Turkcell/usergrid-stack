@@ -9,7 +9,7 @@
 
 	<import resource="classpath:/usergrid-services-context.xml" />
 	<import resource="classpath:/usergrid-scheduler-context.xml" />
-	
+	<import resource="classpath:/dashboard-context.xml" />
 	<context:component-scan base-package="org.usergrid.rest" />
 
 
