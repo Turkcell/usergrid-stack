@@ -152,6 +152,14 @@ import org.usergrid.utils.*;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.json.JSONConfiguration;
+import org.jasig.cas.client.validation.Assertion;
+import org.jasig.cas.client.validation.Cas20ServiceTicketValidator;
+import org.springframework.beans.factory.annotation.Value;
 
 public class ManagementServiceImpl implements ManagementService {
 
@@ -210,6 +218,8 @@ public class ManagementServiceImpl implements ManagementService {
 
   protected EncryptionService encryptionService;
 
+  private Cas20ServiceTicketValidator ticketValidator;
+    private String tgtEndpoint;
   /**
    * Must be constructed with a CassandraClientPool.
    * 
@@ -1987,9 +1997,9 @@ public class ManagementServiceImpl implements ManagementService {
   @Override
   public void startAdminUserActivationFlow(UserInfo user) throws Exception {
     if (user.isActivated()) {
-      sendAdminUserConfirmationEmail(user);
+            /*sendAdminUserConfirmationEmail(user);
       sendAdminUserActivatedEmail(user);
-      sendSysAdminNewAdminActivatedNotificationEmail(user);
+            sendSysAdminNewAdminActivatedNotificationEmail(user);*/
     } else {
       if (newAdminUsersRequireConfirmation()) {
         sendAdminUserConfirmationEmail(user);
@@ -2698,4 +2708,63 @@ public class ManagementServiceImpl implements ManagementService {
   public void setSaltProvider(SaltProvider saltProvider) {
     this.saltProvider = saltProvider;
   }
+  
+  @Override
+  public UserInfo verifyAdminUserCasToken(String token, String service) 
+          throws Exception {
+    try {
+        final Assertion assertion = this.ticketValidator.validate(token,service);
+	Entity entity = getUserEntityByIdentifier(MANAGEMENT_APPLICATION_ID,
+                Identifier.fromName(assertion.getPrincipal().getName()));
+	User user = null;
+			if (entity != null) {
+				user = (User) entity.toTypedEntity();
+				logger.info("Found user {} as a username", assertion
+						.getPrincipal().getName());
+			}
+
+			if (user == null) {
+				logger.info("user not found for principal name {}", assertion
+						.getPrincipal().getName());
+				return null;
+			}
+			return getUserInfo(MANAGEMENT_APPLICATION_ID, user);
+		} catch (Exception e) {
+		}
+		logger.info("cas token {} failed", token);
+		return null;
+	}
+  
+  @Override
+    public UserInfo verifyAdminUserCasCredentials(String name, String password) throws Exception {
+        try {
+            String ticketGrantingTicket = CasRestfulClient.getTicketGrantingTicket(tgtEndpoint, name, password);
+            if (ticketGrantingTicket == null) {
+                return null;
+            } else {
+                CasRestfulClient.logout(tgtEndpoint, ticketGrantingTicket);
+                User entity = getUserEntityByIdentifier(MANAGEMENT_APPLICATION_ID, Identifier.fromName(name));
+                User user = null;
+                if (entity != null) {
+                    user = (User) entity.toTypedEntity();
+                    logger.info("Found user {} as a username", name);
+                }
+
+                if (user == null) {
+                    logger.info("user not found for principal name {}", name);
+                    return null;
+                }
+                return getUserInfo(MANAGEMENT_APPLICATION_ID, user);
+            }
+        } catch (Exception e) {
+            logger.warn("cas username authentication failed", e);
+        }
+        return null;
+    }
+
+    @Value("#{properties['usergrid.authentication.host']}")
+    public void setServerName(String serverName) {
+        this.tgtEndpoint = serverName.endsWith("/") ? serverName + "v1/tickets/" : serverName + "/v1/tickets/";
+        this.ticketValidator = new Cas20ServiceTicketValidator(serverName);
+    }
 }

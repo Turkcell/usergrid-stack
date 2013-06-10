@@ -8,6 +8,12 @@
 		<param-name>contextConfigLocation</param-name>
 		<param-value>classpath:usergrid-rest-deploy-context.xml</param-value>
 	</context-param>
+        <resource-ref>
+            <description>cas mysql datasource</description>
+            <res-ref-name>jdbc/usergridDataSource</res-ref-name>
+            <res-type>javax.sql.DataSource</res-type>
+            <res-auth>Container</res-auth>
+        </resource-ref>
 	<listener>
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>
