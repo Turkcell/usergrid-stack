@@ -45,7 +45,6 @@ public class DashboardResource {
 	private DashboardService dashboardService;
 
 	public DashboardResource() {
-		(new Exception()).printStackTrace();
 	}
 
 	@GET
