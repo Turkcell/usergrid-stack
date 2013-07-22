@@ -8,12 +8,13 @@
         <artifactId>usergrid</artifactId>
         <version>0.0.27-SNAPSHOT</version>
     </parent>
-    <groupId>org.usergrid</groupId>
     <artifactId>usergrid-dashboard</artifactId>
-    <name>usergrid-dashboard</name>
+    <name>${bundle.symbolicName} [${bundle.namespace}]</name>
     <url>http://maven.apache.org</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <bundle.symbolicName>org.usergrid.dashboard</bundle.symbolicName>
+        <bundle.namespace>org.usergrid</bundle.namespace>
     </properties>
     <repositories>
         <repository>
