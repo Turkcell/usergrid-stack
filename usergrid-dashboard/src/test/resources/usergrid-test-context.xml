@@ -3,12 +3,11 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
        xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p"
        xmlns:aop="http://www.springframework.org/schema/aop"
-       xmlns:tx="http://www.springframework.org/schema/tx"
        xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
-       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd">
+  ">
 
     <bean id="properties"
           class="org.springframework.beans.factory.config.PropertiesFactoryBean">
@@ -28,54 +27,30 @@
     <bean id="binaryStore" class="org.usergrid.services.assets.data.LocalFileBinaryStore">
         <property name="reposLocation" value="${usergrid.temp.files}" />
     </bean>
-    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
-        <property name="username" value="${dashboard.jdbc.username}"/>
-        <property name="password" value="${dashboard.jdbc.password}"/>
-        <property name="driverClassName" value="${dashboard.jdbc.driver}"/>
-        <property name="url" value="${dashboard.jdbc.url}"/>
+    <bean id="managementServiceAspect"
+          class="org.usergrid.dashboard.aspects.DashboardManagementServiceAspect">
+        <property name="dashboardService" ref="dashboardService" />
     </bean>
-    
-    <bean id="jpaEmf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
-        <property name="dataSource" ref="dataSource"/>
-        <property name="jpaDialect">
-            <bean class="org.springframework.orm.jpa.vendor.EclipseLinkJpaDialect"/>
-        </property>
+    <bean id="createUserAspect"
+          class="org.usergrid.dashboard.aspects.DashboardCreateUserAspect">
+        <property name="dashboardService" ref="dashboardService" />
     </bean>
-    <bean id="jpaEntityManager" class="org.springframework.orm.jpa.support.SharedEntityManagerBean">
-        <property name="entityManagerFactory" ref="jpaEmf"/>
+    <bean id="dashboardService" class="org.usergrid.dashboard.service.DashboardServiceCassandraImpl" init-method="init">
+        <property name="cass" ref="cassandraService"/>
     </bean>
-    <bean id="txManager" class="org.springframework.orm.jpa.JpaTransactionManager">
-        <property name="entityManagerFactory" ref="jpaEmf"/>
-    </bean>
-    <tx:advice id="txAdvice" transaction-manager="txManager">
-        <tx:attributes>
-            <tx:method name="*Created" propagation="REQUIRED"/>
-            <tx:method name="*" propagation="REQUIRED" read-only="true"/>
-        </tx:attributes>
-    </tx:advice>
-    <bean id="managementServiceAspect" class="org.usergrid.dashboard.aspects.DashboardManagementServiceAspect" >
-        <property name="dashboardService" ref="dashboardService"/>
-    </bean>
-    <bean id="createUserAspect" class="org.usergrid.dashboard.aspects.DashboardCreateUserAspect">
-        <property name="dashboardService" ref="dashboardService"/>
-    </bean>
-    <bean id="dashboardService" class="org.usergrid.dashboard.service.DashboardServiceImpl">
-        <property name="entityManager" ref="jpaEntityManager"/>
-    </bean>
+    <context:component-scan base-package="org.usergrid.dashboard.web"/>
     <aop:config>
-        <aop:pointcut id="dashboardServiceTransaction" expression="execution(* org.usergrid.dashboard.service.DashboardService.*(..))"/>
-        <aop:advisor advice-ref="txAdvice" pointcut-ref="dashboardServiceTransaction"/>
         <aop:aspect id="managementServiceParticipant" ref="managementServiceAspect">
             <aop:pointcut id="managementServicePointcut"
-                          expression="execution(* org.usergrid.management.ManagementService.*(..))" />
-            <aop:around pointcut-ref="managementServicePointcut" method="applyTrace" />
+                          expression="execution(* org.usergrid.management.cassandra.ManagementServiceImpl.*(..))" />
+            <aop:around pointcut-ref="managementServicePointcut"
+                        method="applyTrace" />
         </aop:aspect>
         <aop:aspect id="createUserParticipant" ref="createUserAspect">
             <aop:pointcut
-                expression="execution(* org.usergrid.persistence.cassandra.EntityManagerImpl.create(..))"
+                expression="execution(* org.usergrid.persistence.cassandra.EntityManagerImpl.createItemInCollection(..))"
                 id="createUserPointcut" />
-            <aop:around pointcut-ref="createUserPointcut"
-                        method="applyTrace" />
+            <aop:around pointcut-ref="createUserPointcut" method="applyTrace" />
         </aop:aspect>
     </aop:config>
 </beans>

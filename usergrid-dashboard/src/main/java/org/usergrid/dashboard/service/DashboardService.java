@@ -28,5 +28,5 @@ public interface DashboardService {
 
     List<UsergridCounter> getDashboardCounters();
 
-    List<UsergridApplicationProperties> getDashboardCountersOrderByCount(Integer start, Integer end);
+    List<UsergridApplicationProperties> getDashboardCountersOrderByCount(Integer start, Integer count);
 }

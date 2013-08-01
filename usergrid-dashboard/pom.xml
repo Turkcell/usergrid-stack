@@ -16,12 +16,6 @@
         <bundle.symbolicName>org.usergrid.dashboard</bundle.symbolicName>
         <bundle.namespace>org.usergrid</bundle.namespace>
     </properties>
-    <repositories>
-        <repository>
-            <id>EclipseLink</id>
-            <url>http://download.eclipse.org/rt/eclipselink/maven.repo</url>
-        </repository>
-    </repositories>
     <dependencies>
         <dependency>
             <groupId>org.usergrid</groupId>
@@ -87,21 +81,6 @@
             <version>2.2.0</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.persistence</groupId>
-            <artifactId>org.eclipse.persistence.jpa</artifactId>
-            <version>2.4.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-orm</artifactId>
-            <version>${org.springframework.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.24</version>
-        </dependency>
-        <dependency>
             <groupId>org.hectorclient</groupId>
             <artifactId>hector-test</artifactId>
             <version>${hector-test-version}</version>
@@ -110,17 +89,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-dbcp</groupId>
-            <artifactId>commons-dbcp</artifactId>
-            <version>1.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hsqldb</groupId>
-            <artifactId>hsqldb</artifactId>
-            <version>2.2.9</version>
             <scope>test</scope>
         </dependency>
             
@@ -148,30 +116,6 @@
                     </systemPropertyVariables>
                     <forkMode>always</forkMode>
                 </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>eclipselink-staticweave-maven-plugin</artifactId>
-                <groupId>au.com.alderaan</groupId>
-                <version>1.0.4</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>weave</goal>
-                        </goals>
-                        <phase>process-classes</phase>
-                        <configuration>
-                            <logLevel>ALL</logLevel>
-                            <includeProjectClasspath>true</includeProjectClasspath>
-                        </configuration>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.eclipse.persistence</groupId>
-                        <artifactId>eclipselink</artifactId>
-                        <version>2.4.0</version>
-                    </dependency>
-                </dependencies>
             </plugin>
         </plugins>
         <pluginManagement>

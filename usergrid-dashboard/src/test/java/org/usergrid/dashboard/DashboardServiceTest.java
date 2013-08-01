@@ -13,6 +13,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertNotNull;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -39,7 +40,7 @@ public class DashboardServiceTest {
     static ManagementService management;
     static DashboardService dashboardService;
     private final EntityManagerFactoryImpl emf;
-    private final ServiceManagerFactory smf=null;
+    static ServiceManagerFactory smf=null;
     @Autowired
     protected Properties properties;
 
@@ -55,6 +56,7 @@ public class DashboardServiceTest {
         // helper.setClient(this);
         helper.setup();
         management = helper.getManagementService();
+        smf=helper.getApplicationContext().getBean(ServiceManagerFactory.class);
         dashboardService = helper.getApplicationContext().getBean(
                 DashboardService.class);
     }

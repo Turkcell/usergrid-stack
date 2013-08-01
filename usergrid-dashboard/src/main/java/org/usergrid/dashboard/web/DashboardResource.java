@@ -56,8 +56,8 @@ public class DashboardResource {
 	@GET
 	@Path("appsProperties")
 	public List<UsergridApplicationProperties> getApplicationProperties(
-			@QueryParam("start") Integer start, @QueryParam("start") Integer end) {
-		return dashboardService.getDashboardCountersOrderByCount(start, end);
+			@QueryParam("start") Integer start, @QueryParam("count") Integer count) {
+		return dashboardService.getDashboardCountersOrderByCount(start, count);
 	}
 
 	@Autowired

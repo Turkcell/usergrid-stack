@@ -16,35 +16,26 @@
 package org.usergrid.dashboard.domain;
 
 import java.io.Serializable;
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
 
 /**
  *
  * @author capacman
  */
-@Entity
-@Table(name = "USERGRID_APPLICATION_PROPERTIES")
-public class UsergridApplicationProperties implements Serializable {
+public class UsergridApplicationProperties implements Serializable, Comparable<UsergridApplicationProperties> {
 
     private static final long serialVersionUID = 1L;
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
-    @Basic
-    @Column(updatable = false, nullable = false, unique = true, length = 40, name = "APPLICATION_UUID")
     private String uuid;
-    @Basic
-    @Column(updatable = true, nullable = false, unique = false, length = 500, name = "APPLICATION_NAME")
     private String name;
-    @Basic
-    @Column(updatable = true, nullable = false, unique = false, name = "APPLICATION_USER_COUNT")
     private Long userCount;
+
+    public UsergridApplicationProperties() {
+    }
+
+    public UsergridApplicationProperties(String uuid, String name, Long userCount) {
+        this.uuid = uuid;
+        this.name = name;
+        this.userCount = userCount;
+    }
 
     public Long getUserCount() {
         return userCount;
@@ -70,11 +61,14 @@ public class UsergridApplicationProperties implements Serializable {
         this.name = name;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
+    @Override
+    public int compareTo(UsergridApplicationProperties o) {
+        if (this.userCount < o.userCount) {
+            return -1;
+        } else if (this.userCount == o.userCount) {
+            return 0;
+        } else {
+            return 1;
+        }
     }
 }
