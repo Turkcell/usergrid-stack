@@ -16,6 +16,8 @@
 package org.usergrid.dashboard.web;
 
 import java.util.List;
+import java.util.Map;
+import javax.ws.rs.DefaultValue;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -56,9 +58,15 @@ public class DashboardResource {
 	@GET
 	@Path("appsProperties")
 	public List<UsergridApplicationProperties> getApplicationProperties(
-			@QueryParam("start") Integer start, @QueryParam("count") Integer count) {
+			@DefaultValue("0") @QueryParam("start") Integer start, @DefaultValue("10") @QueryParam("count") Integer count) {
 		return dashboardService.getDashboardCountersOrderByCount(start, count);
 	}
+        
+        @GET
+        @Path("resetCounters")
+        public Map<String,Object> resetCounters(){
+            return dashboardService.resetCounters();
+        }
 
 	@Autowired
 	public void setDashboardService(DashboardService dashboardService) {

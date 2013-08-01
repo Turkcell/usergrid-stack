@@ -16,13 +16,22 @@
  */
 package org.usergrid.dashboard.service;
 
+import com.google.common.collect.BiMap;
 import com.usergrid.count.CassandraCounterStore;
 import com.usergrid.count.CounterStore;
 import com.usergrid.count.common.Count;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.CounterSlice;
@@ -30,23 +39,30 @@ import me.prettyprint.hector.api.beans.HCounterColumn;
 import me.prettyprint.hector.api.ddl.ColumnFamilyDefinition;
 import me.prettyprint.hector.api.ddl.ColumnType;
 import me.prettyprint.hector.api.ddl.ComparatorType;
+import me.prettyprint.hector.api.factory.HFactory;
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
 import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery;
+import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.SliceCounterQuery;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usergrid.dashboard.domain.UsergridApplicationProperties;
 import org.usergrid.dashboard.domain.UsergridCounter;
 import org.usergrid.management.ApplicationInfo;
+import org.usergrid.management.ManagementService;
 import org.usergrid.management.OrganizationInfo;
 import org.usergrid.management.OrganizationOwnerInfo;
 import org.usergrid.management.UserInfo;
+import org.usergrid.persistence.EntityManagerFactory;
 import org.usergrid.persistence.cassandra.CassandraService;
 
 /**
  *
- * @author capacman
+ * @author Anıl Halil
  */
 public class DashboardServiceCassandraImpl implements DashboardService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DashboardServiceCassandraImpl.class);
     private static final String DASHBOARD_KEYSPACE = "Usergrid_Dashboard";
     public static final String SYSTEM_KEY = "System";
     private static final String APPLICATIONS_KEY = "Applications";
@@ -54,6 +70,16 @@ public class DashboardServiceCassandraImpl implements DashboardService {
     private CassandraService cass;
     private CounterStore counterStore;
     private Keyspace keyspace;
+    private ManagementService managementService;
+
+    public void setManagementService(ManagementService managementService) {
+        this.managementService = managementService;
+    }
+
+    public void setEmf(EntityManagerFactory emf) {
+        this.emf = emf;
+    }
+    private EntityManagerFactory emf;
 
     public void setCass(CassandraService cass) {
         this.cass = cass;
@@ -142,6 +168,61 @@ public class DashboardServiceCassandraImpl implements DashboardService {
         }
         Collections.sort(counters);
         return counters;
+    }
+
+    @Override
+    public Map<String, Object> resetCounters() {
+        try {
+            deleteCounters();
+            generateSystemCounters();
+            generateApplicationCounters();
+            Map<String,Object> result=new HashMap<String, Object>();
+            result.put("system", getDashboardCounters());
+            result.put("applications", getApplicationProperties());
+            return result;
+        } catch (Exception ex) {
+            LOGGER.info("counter reset failed", ex);
+            return Collections.EMPTY_MAP;
+        }
+    }
+
+    private void deleteCounters() {
+        Mutator<ByteBuffer> mutator = HFactory.createMutator(keyspace, ByteBufferSerializer.get());
+        mutator.addCounterDeletion(StringSerializer.get().toByteBuffer(SYSTEM_KEY), DASHBOARD_COUNTERS_CF);
+        mutator.addCounterDeletion(StringSerializer.get().toByteBuffer(APPLICATIONS_KEY), DASHBOARD_COUNTERS_CF);
+        mutator.execute();
+    }
+
+    private void generateSystemCounters() throws Exception {
+        BiMap<UUID, String> organizations = managementService.getOrganizations();
+        Count orgCount = new Count(DASHBOARD_COUNTERS_CF, SYSTEM_KEY, ORGANIZATIONS_COUNTER, organizations.size());
+        Set<String> userSet = new HashSet<String>(organizations.size() * 2);
+        long appCounter = 0;
+        for (Map.Entry<UUID, String> entry : organizations.entrySet()) {
+            UUID uuid = entry.getKey();
+            List<UserInfo> adminUsersForOrganization = managementService.getAdminUsersForOrganization(uuid);
+            for (UserInfo ui : adminUsersForOrganization) {
+                userSet.add(ui.getUsername());
+            }
+            appCounter += managementService.getApplicationsForOrganizations(organizations.keySet()).size();
+        }
+        Count adminCount = new Count(DASHBOARD_COUNTERS_CF, SYSTEM_KEY, ADMINUSER_COUNTER, userSet.size());
+        Count appCount = new Count(DASHBOARD_COUNTERS_CF, SYSTEM_KEY, APPLICATIONS_COUNTER, userSet.size());
+        counterStore.save(Arrays.asList(orgCount, adminCount, appCount));
+    }
+
+    private void generateApplicationCounters() throws Exception {
+        BiMap<UUID, String> organizations = managementService.getOrganizations();
+        for (Map.Entry<UUID, String> entry : organizations.entrySet()) {
+            UUID uuid = entry.getKey();
+            BiMap<UUID, String> applicationsForOrganization = managementService.getApplicationsForOrganization(uuid);
+            List<Count> counters = new ArrayList<Count>(applicationsForOrganization.size());
+            for (Map.Entry<UUID, String> appEntry : applicationsForOrganization.entrySet()) {
+                UUID appUuid = appEntry.getKey();
+                counters.add(new Count(DASHBOARD_COUNTERS_CF, APPLICATIONS_KEY, appEntry.getValue() + ";" + appUuid.toString(), emf.getEntityManager(appUuid).getApplicationCollectionSize("users")));
+            }
+            counterStore.save(counters);
+        }
     }
 
 }

@@ -11,6 +11,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.AfterClass;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -178,7 +179,12 @@ public class DashboardServiceTest {
     public void testUserAssign() {
         assertTrue(TypedEntity.class.isAssignableFrom(User.class));
     }
-
+    
+    @Test
+    public void testRecreateCounters(){
+        dashboardService.resetCounters();
+        assertFalse(dashboardService.getDashboardCounters().isEmpty());
+    }
     @Test
     public void testUserCreate() throws Exception {
         UUID applicationId = emf.createApplication("testOrganization",

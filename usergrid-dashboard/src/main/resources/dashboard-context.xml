@@ -17,6 +17,8 @@
     </bean>
     <bean id="dashboardService" class="org.usergrid.dashboard.service.DashboardServiceCassandraImpl" init-method="init">
         <property name="cass" ref="cassandraService"/>
+        <property name="managementService" ref="managementService"/>
+        <property name="emf" ref="entityManagerFactory"/>
     </bean>
     <context:component-scan base-package="org.usergrid.dashboard.web"/>
     <aop:config>

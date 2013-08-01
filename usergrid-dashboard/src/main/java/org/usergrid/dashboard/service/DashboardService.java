@@ -1,6 +1,7 @@
 package org.usergrid.dashboard.service;
 
 import java.util.List;
+import java.util.Map;
 import org.usergrid.dashboard.domain.UsergridApplicationProperties;
 import org.usergrid.dashboard.domain.UsergridCounter;
 import org.usergrid.management.ApplicationInfo;
@@ -29,4 +30,6 @@ public interface DashboardService {
     List<UsergridCounter> getDashboardCounters();
 
     List<UsergridApplicationProperties> getDashboardCountersOrderByCount(Integer start, Integer count);
+    
+    Map<String,Object> resetCounters();
 }
