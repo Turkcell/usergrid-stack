@@ -193,7 +193,9 @@ public class DashboardServiceCassandraImpl implements DashboardService {
         List<UsergridCounter> dashboardCounters = getDashboardCounters();
         List<Count> systemNegativeCounters=new ArrayList<Count>(3);
         for (UsergridCounter usergridCounter : dashboardCounters) {
-            systemNegativeCounters.add(createCount(SYSTEM_KEY, usergridCounter.getName(), usergridCounter.getCounter()*-1));
+            final Count count = createCount(SYSTEM_KEY, usergridCounter.getName(), usergridCounter.getCounter()*-1);
+            systemNegativeCounters.add(count);
+            LOGGER.info("negative count {}",count.toString());
         }
         counterStore.save(systemNegativeCounters);
         List<UsergridApplicationProperties> applicationProperties = getApplicationProperties();
@@ -219,13 +221,14 @@ public class DashboardServiceCassandraImpl implements DashboardService {
             List<Count> appCounters = new ArrayList<Count>(applicationsForOrganization.size());
             for (Map.Entry<UUID, String> appEntry : applicationsForOrganization.entrySet()) {
                 UUID appUuid = appEntry.getKey();
-                appCounters.add(new Count(DASHBOARD_COUNTERS_CF, APPLICATIONS_KEY, appEntry.getValue() + ";" + appUuid.toString(), emf.getEntityManager(appUuid).getApplicationCollectionSize("users")));
+                appCounters.add(createCount(APPLICATIONS_KEY, appEntry.getValue() + ";" + appUuid.toString(), emf.getEntityManager(appUuid).getApplicationCollectionSize("users")));
                 appCounter++;
             }
             counterStore.save(appCounters);
         }
-        Count adminCount = new Count(DASHBOARD_COUNTERS_CF, SYSTEM_KEY, ADMINUSER_COUNTER, userSet.size());
-        Count appCount = new Count(DASHBOARD_COUNTERS_CF, SYSTEM_KEY, APPLICATIONS_COUNTER, appCounter);
+        Count adminCount = createCount(SYSTEM_KEY, ADMINUSER_COUNTER, userSet.size());
+        Count appCount = createCount(SYSTEM_KEY, APPLICATIONS_COUNTER, appCounter);
+        LOGGER.info("Generated counters {} {} {}",new Object[]{orgCount.toString(),adminCount.toString(),appCount.toString()});
         counterStore.save(Arrays.asList(orgCount, adminCount, appCount));
     }
 
