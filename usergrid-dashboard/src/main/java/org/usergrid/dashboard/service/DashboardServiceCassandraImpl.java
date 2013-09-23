@@ -142,7 +142,7 @@ public class DashboardServiceCassandraImpl implements DashboardService {
         if (applicationProperties.size() <= start) {
             return Collections.EMPTY_LIST;
         }
-        return applicationProperties.subList(start, applicationProperties.size() > start + count ? start + count : applicationProperties.size() - 1);
+        return applicationProperties.subList(start, applicationProperties.size() > start + count ? start + count : applicationProperties.size());
     }
 
     private void incrementCounter(String key, String counter) {
