@@ -161,9 +161,11 @@ public class DashboardServiceCassandraImpl implements DashboardService {
         CounterSlice<String> result = sliceQuery.execute().get();
         List<UsergridApplicationProperties> counters = new ArrayList<UsergridApplicationProperties>(3);
         for (HCounterColumn<String> column : result.getColumns()) {
-            final String columnName = column.getName();
-            final int seperator = columnName.lastIndexOf(";");
-            counters.add(new UsergridApplicationProperties(columnName.substring(seperator), columnName.substring(0, seperator), column.getValue()));
+            if (column.getValue() != 0) {
+                final String columnName = column.getName();
+                final int seperator = columnName.lastIndexOf(";");
+                counters.add(new UsergridApplicationProperties(columnName.substring(seperator), columnName.substring(0, seperator), column.getValue()));
+            }
         }
         Collections.sort(counters);
         return counters;
