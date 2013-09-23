@@ -5,7 +5,6 @@ import java.io.Serializable;
 public class UsergridCounter implements Serializable {
 
     private String name;
-
     private long counter;
 
     public UsergridCounter() {
@@ -36,6 +35,7 @@ public class UsergridCounter implements Serializable {
     @Override
     public int hashCode() {
         int hash = 7;
+        hash = 59 * hash + (this.name != null ? this.name.hashCode() : 0);
         return hash;
     }
 
@@ -51,10 +51,12 @@ public class UsergridCounter implements Serializable {
         if ((this.name == null) ? (other.name != null) : !this.name.equals(other.name)) {
             return false;
         }
-        if (this.counter != other.counter) {
-            return false;
-        }
         return true;
+    }
+    
+    @Override
+    public String toString() {
+        return "UsergridCounter{" + "name=" + name + ", counter=" + counter + '}';
     }
 
 }
