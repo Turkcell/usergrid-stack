@@ -58,7 +58,6 @@ public class DashboardManagementServiceAspect {
     private DashboardService dashboardService;
 
     public Object applyTrace(ProceedingJoinPoint pjp) throws Throwable {
-	logger.info("managementService trace for {}",pjp.toLongString());
         Object returnObject = pjp.proceed();
         try {
             if (pjp.getSignature() instanceof MethodSignature) {
@@ -66,6 +65,7 @@ public class DashboardManagementServiceAspect {
                         .getSignature();
                 for (TraceOperation traceOperation : TraceOperation.values()) {
                     if (traceOperation.isAdviceFor(methodSignature.getMethod())) {
+                        logger.info("managementService trace for {}", pjp.toLongString());
                         traceOperation.applyTrace(getDashboardService(),
                                 returnObject);
                     }

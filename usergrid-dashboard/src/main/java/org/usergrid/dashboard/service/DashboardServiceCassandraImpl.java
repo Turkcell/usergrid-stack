@@ -108,7 +108,7 @@ public class DashboardServiceCassandraImpl implements DashboardService {
 
     @Override
     public void organizationOwnerCreated(OrganizationOwnerInfo organizationOwnerInfo) {
-        counterStore.save(Arrays.asList(createCount(SYSTEM_KEY, ORGANIZATIONS_COUNTER), createCount(SYSTEM_KEY, ADMINUSER_COUNTER)));
+        counterStore.save(Arrays.asList(createCount(SYSTEM_KEY, ORGANIZATIONS_COUNTER,1), createCount(SYSTEM_KEY, ADMINUSER_COUNTER,1)));
     }
 
     @Override
@@ -146,11 +146,11 @@ public class DashboardServiceCassandraImpl implements DashboardService {
     }
 
     private void incrementCounter(String key, String counter) {
-        counterStore.save(createCount(key, counter));
+        counterStore.save(createCount(key, counter,1));
     }
 
-    private Count createCount(String key, String counter) {
-        return new Count(DASHBOARD_COUNTERS_CF, key, counter, 1);
+    private Count createCount(String key, String counter,long value) {
+        return new Count(DASHBOARD_COUNTERS_CF, key, counter, value);
     }
 
     @Override
@@ -173,9 +173,13 @@ public class DashboardServiceCassandraImpl implements DashboardService {
     @Override
     public Map<String, Object> resetCounters() {
         try {
+            LOGGER.info("resetting counters");
             deleteCounters();
+            LOGGER.info("counter deletion completed");
             generateSystemCounters();
+            LOGGER.info("system counters generated");
             generateApplicationCounters();
+            LOGGER.info("application counters generated");
             Map<String,Object> result=new HashMap<String, Object>();
             result.put("system", getDashboardCounters());
             result.put("applications", getApplicationProperties());
@@ -188,9 +192,18 @@ public class DashboardServiceCassandraImpl implements DashboardService {
 
     private void deleteCounters() {
         Mutator<ByteBuffer> mutator = HFactory.createMutator(keyspace, ByteBufferSerializer.get());
-        mutator.addCounterDeletion(StringSerializer.get().toByteBuffer(SYSTEM_KEY), DASHBOARD_COUNTERS_CF);
-        mutator.addCounterDeletion(StringSerializer.get().toByteBuffer(APPLICATIONS_KEY), DASHBOARD_COUNTERS_CF);
-        mutator.execute();
+        List<UsergridCounter> dashboardCounters = getDashboardCounters();
+        List<Count> systemNegativeCounters=new ArrayList<Count>(3);
+        for (UsergridCounter usergridCounter : dashboardCounters) {
+            systemNegativeCounters.add(createCount(SYSTEM_KEY, usergridCounter.getName(), usergridCounter.getCounter()*-1));
+        }
+        counterStore.save(systemNegativeCounters);
+        List<UsergridApplicationProperties> applicationProperties = getApplicationProperties();
+        List<Count> appsNegativeCounters = new ArrayList<Count>(applicationProperties.size());
+        for (UsergridApplicationProperties usergridApplicationProperties : applicationProperties) {
+            appsNegativeCounters.add(createCount(APPLICATIONS_KEY, usergridApplicationProperties.getName()+usergridApplicationProperties.getUuid(), usergridApplicationProperties.getUserCount()*-1));
+        }
+        counterStore.save(appsNegativeCounters);
     }
 
     private void generateSystemCounters() throws Exception {
@@ -207,7 +220,7 @@ public class DashboardServiceCassandraImpl implements DashboardService {
             appCounter += managementService.getApplicationsForOrganizations(organizations.keySet()).size();
         }
         Count adminCount = new Count(DASHBOARD_COUNTERS_CF, SYSTEM_KEY, ADMINUSER_COUNTER, userSet.size());
-        Count appCount = new Count(DASHBOARD_COUNTERS_CF, SYSTEM_KEY, APPLICATIONS_COUNTER, userSet.size());
+        Count appCount = new Count(DASHBOARD_COUNTERS_CF, SYSTEM_KEY, APPLICATIONS_COUNTER, appCounter);
         counterStore.save(Arrays.asList(orgCount, adminCount, appCount));
     }
 

@@ -15,6 +15,7 @@
  */
 package org.usergrid.dashboard.web;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.DefaultValue;
@@ -33,43 +34,56 @@ import org.usergrid.dashboard.domain.UsergridCounter;
 import org.usergrid.dashboard.service.DashboardService;
 
 /**
- * 
+ *
  * @author capacman
  */
 @Path("/dashboard")
 @Component
 @Scope("singleton")
-@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
-		"application/x-javascript", "text/ecmascript",
-		"application/ecmascript", "text/jscript" })
+@Produces({MediaType.APPLICATION_JSON, "application/javascript",
+    "application/x-javascript", "text/ecmascript",
+    "application/ecmascript", "text/jscript"})
 public class DashboardResource {
 
-	private DashboardService dashboardService;
+    private DashboardService dashboardService;
+    private Thread execution = null;
 
-	public DashboardResource() {
-	}
+    public DashboardResource() {
+    }
 
-	@GET
-	@Path("counters")
-	public List<UsergridCounter> getDashboardCounters() {
-		return dashboardService.getDashboardCounters();
-	}
+    @GET
+    @Path("counters")
+    public List<UsergridCounter> getDashboardCounters() {
+        return dashboardService.getDashboardCounters();
+    }
 
-	@GET
-	@Path("appsProperties")
-	public List<UsergridApplicationProperties> getApplicationProperties(
-			@DefaultValue("0") @QueryParam("start") Integer start, @DefaultValue("10") @QueryParam("count") Integer count) {
-		return dashboardService.getDashboardCountersOrderByCount(start, count);
-	}
-        
-        @GET
-        @Path("resetCounters")
-        public Map<String,Object> resetCounters(){
-            return dashboardService.resetCounters();
+    @GET
+    @Path("appsProperties")
+    public List<UsergridApplicationProperties> getApplicationProperties(
+            @DefaultValue("0") @QueryParam("start") Integer start, @DefaultValue("10") @QueryParam("count") Integer count) {
+        return dashboardService.getDashboardCountersOrderByCount(start, count);
+    }
+
+    @GET
+    @Path("resetCounters")
+    synchronized public Map<String, Object> resetCounters() {
+        if (execution == null || execution.isAlive()) {
+            execution = new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    dashboardService.resetCounters();
+                }
+            });
+            execution.start();
         }
+        Map<String, Object> message = new HashMap<String, Object>();
+        message.put("reset", "scheduled");
+        return message;
+    }
 
-	@Autowired
-	public void setDashboardService(DashboardService dashboardService) {
-		this.dashboardService = dashboardService;
-	}
+    @Autowired
+    public void setDashboardService(DashboardService dashboardService) {
+        this.dashboardService = dashboardService;
+    }
 }
