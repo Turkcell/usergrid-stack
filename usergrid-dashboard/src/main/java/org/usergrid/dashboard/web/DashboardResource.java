@@ -67,7 +67,7 @@ public class DashboardResource {
     @GET
     @Path("resetCounters")
     synchronized public Map<String, Object> resetCounters() {
-        if (execution == null || execution.isAlive()) {
+        if (execution == null || !execution.isAlive()) {
             execution = new Thread(new Runnable() {
 
                 @Override

@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -108,7 +107,7 @@ public class DashboardServiceCassandraImpl implements DashboardService {
 
     @Override
     public void organizationOwnerCreated(OrganizationOwnerInfo organizationOwnerInfo) {
-        counterStore.save(Arrays.asList(createCount(SYSTEM_KEY, ORGANIZATIONS_COUNTER,1), createCount(SYSTEM_KEY, ADMINUSER_COUNTER,1)));
+        counterStore.save(Arrays.asList(createCount(SYSTEM_KEY, ORGANIZATIONS_COUNTER, 1), createCount(SYSTEM_KEY, ADMINUSER_COUNTER, 1)));
     }
 
     @Override
@@ -146,10 +145,10 @@ public class DashboardServiceCassandraImpl implements DashboardService {
     }
 
     private void incrementCounter(String key, String counter) {
-        counterStore.save(createCount(key, counter,1));
+        counterStore.save(createCount(key, counter, 1));
     }
 
-    private Count createCount(String key, String counter,long value) {
+    private Count createCount(String key, String counter, long value) {
         return new Count(DASHBOARD_COUNTERS_CF, key, counter, value);
     }
 
@@ -178,9 +177,8 @@ public class DashboardServiceCassandraImpl implements DashboardService {
             LOGGER.info("counter deletion completed");
             generateSystemCounters();
             LOGGER.info("system counters generated");
-            generateApplicationCounters();
-            LOGGER.info("application counters generated");
-            Map<String,Object> result=new HashMap<String, Object>();
+
+            Map<String, Object> result = new HashMap<String, Object>();
             result.put("system", getDashboardCounters());
             result.put("applications", getApplicationProperties());
             return result;
@@ -193,15 +191,15 @@ public class DashboardServiceCassandraImpl implements DashboardService {
     private void deleteCounters() {
         Mutator<ByteBuffer> mutator = HFactory.createMutator(keyspace, ByteBufferSerializer.get());
         List<UsergridCounter> dashboardCounters = getDashboardCounters();
-        List<Count> systemNegativeCounters=new ArrayList<Count>(3);
+        List<Count> systemNegativeCounters = new ArrayList<Count>(3);
         for (UsergridCounter usergridCounter : dashboardCounters) {
-            systemNegativeCounters.add(createCount(SYSTEM_KEY, usergridCounter.getName(), usergridCounter.getCounter()*-1));
+            systemNegativeCounters.add(createCount(SYSTEM_KEY, usergridCounter.getName(), usergridCounter.getCounter() * -1));
         }
         counterStore.save(systemNegativeCounters);
         List<UsergridApplicationProperties> applicationProperties = getApplicationProperties();
         List<Count> appsNegativeCounters = new ArrayList<Count>(applicationProperties.size());
         for (UsergridApplicationProperties usergridApplicationProperties : applicationProperties) {
-            appsNegativeCounters.add(createCount(APPLICATIONS_KEY, usergridApplicationProperties.getName()+usergridApplicationProperties.getUuid(), usergridApplicationProperties.getUserCount()*-1));
+            appsNegativeCounters.add(createCount(APPLICATIONS_KEY, usergridApplicationProperties.getName() + usergridApplicationProperties.getUuid(), usergridApplicationProperties.getUserCount() * -1));
         }
         counterStore.save(appsNegativeCounters);
     }
@@ -217,25 +215,18 @@ public class DashboardServiceCassandraImpl implements DashboardService {
             for (UserInfo ui : adminUsersForOrganization) {
                 userSet.add(ui.getUsername());
             }
-            appCounter += managementService.getApplicationsForOrganizations(organizations.keySet()).size();
+            final BiMap<UUID, String> applicationsForOrganization = managementService.getApplicationsForOrganization(entry.getKey());
+            appCounter += applicationsForOrganization.size();
+            List<Count> appCounters = new ArrayList<Count>(applicationsForOrganization.size());
+            for (Map.Entry<UUID, String> appEntry : applicationsForOrganization.entrySet()) {
+                UUID appUuid = appEntry.getKey();
+                appCounters.add(new Count(DASHBOARD_COUNTERS_CF, APPLICATIONS_KEY, appEntry.getValue() + ";" + appUuid.toString(), emf.getEntityManager(appUuid).getApplicationCollectionSize("users")));
+            }
+            counterStore.save(appCounters);
         }
         Count adminCount = new Count(DASHBOARD_COUNTERS_CF, SYSTEM_KEY, ADMINUSER_COUNTER, userSet.size());
         Count appCount = new Count(DASHBOARD_COUNTERS_CF, SYSTEM_KEY, APPLICATIONS_COUNTER, appCounter);
         counterStore.save(Arrays.asList(orgCount, adminCount, appCount));
-    }
-
-    private void generateApplicationCounters() throws Exception {
-        BiMap<UUID, String> organizations = managementService.getOrganizations();
-        for (Map.Entry<UUID, String> entry : organizations.entrySet()) {
-            UUID uuid = entry.getKey();
-            BiMap<UUID, String> applicationsForOrganization = managementService.getApplicationsForOrganization(uuid);
-            List<Count> counters = new ArrayList<Count>(applicationsForOrganization.size());
-            for (Map.Entry<UUID, String> appEntry : applicationsForOrganization.entrySet()) {
-                UUID appUuid = appEntry.getKey();
-                counters.add(new Count(DASHBOARD_COUNTERS_CF, APPLICATIONS_KEY, appEntry.getValue() + ";" + appUuid.toString(), emf.getEntityManager(appUuid).getApplicationCollectionSize("users")));
-            }
-            counterStore.save(counters);
-        }
     }
 
 }
