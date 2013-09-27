@@ -68,6 +68,8 @@ import com.yammer.metrics.core.Sampling;
 import com.yammer.metrics.core.Summarizable;
 import com.yammer.metrics.core.Timer;
 import com.yammer.metrics.stats.Snapshot;
+import org.apache.zookeeper.data.Stat;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * 
@@ -81,6 +83,19 @@ import com.yammer.metrics.stats.Snapshot;
         "application/ecmascript", "text/jscript" })
 public class  RootResource extends AbstractContextResource implements
         MetricProcessor<RootResource.MetricContext> {
+    
+    private String externalLoginService;
+    private String authenticationHost;
+    
+    @Value("#{properties['usergrid.authentication.externalloginservice']}")
+    public void setExternalLoginService(String externalLoginService) {
+        this.externalLoginService = externalLoginService;
+    }
+    
+    @Value("#{properties['usergrid.authentication.host']}")
+    public void setAuthenticationHost(String authenticationHost){
+        this.authenticationHost=authenticationHost;
+    }
 
     static final class MetricContext {
         final boolean showFullSamples;
@@ -151,7 +166,12 @@ public class  RootResource extends AbstractContextResource implements
             return response.build();
         }
     }
-
+    
+    @GET
+    @Path("externallogin")
+    public Response getExternalLogin() throws URISyntaxException{
+        return Response.temporaryRedirect(new URI(authenticationHost+"/login?service="+externalLoginService)).build();
+    }
     @GET
     @Path("status")
     public JSONWithPadding getStatus(
