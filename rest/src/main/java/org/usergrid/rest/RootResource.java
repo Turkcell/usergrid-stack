@@ -86,19 +86,6 @@ import org.springframework.beans.factory.annotation.Value;
 public class RootResource extends AbstractContextResource implements
         MetricProcessor<RootResource.MetricContext> {
 
-    private String externalLoginService;
-    private String authenticationHost;
-
-    @Value("#{properties['usergrid.authentication.externalloginservice']}")
-    public void setExternalLoginService(String externalLoginService) {
-        this.externalLoginService = externalLoginService;
-    }
-
-    @Value("#{properties['usergrid.authentication.host']}")
-    public void setAuthenticationHost(String authenticationHost) {
-        this.authenticationHost = authenticationHost;
-    }
-
     static final class MetricContext {
 
         final boolean showFullSamples;
@@ -168,15 +155,6 @@ public class RootResource extends AbstractContextResource implements
                     "/status"));
             return response.build();
         }
-    }
-
-    @GET
-    @Path("externallogin")
-    public Response getExternalLogin() throws URISyntaxException {
-        return Response.status(302).header("Location", authenticationHost + "/login?service=" + externalLoginService)
-                .header(
-                "Set-Cookie",
-                "JSESSIONID=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT").build();
     }
 
     @GET
