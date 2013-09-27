@@ -173,7 +173,10 @@ public class RootResource extends AbstractContextResource implements
     @GET
     @Path("externallogin")
     public Response getExternalLogin() throws URISyntaxException {
-        return Response.status(302).header("Location", authenticationHost + "/login?service=" + externalLoginService).build();
+        return Response.status(302).header("Location", authenticationHost + "/login?service=" + externalLoginService)
+                .header(
+                "Set-Cookie",
+                "JSESSIONID=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT").build();
     }
 
     @GET
