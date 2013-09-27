@@ -1,18 +1,20 @@
-/*******************************************************************************
+/**
+ * *****************************************************************************
  * Copyright 2012 Apigee Corporation
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ *****************************************************************************
+ */
 package org.usergrid.rest;
 
 import static org.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
@@ -72,32 +74,33 @@ import org.apache.zookeeper.data.Stat;
 import org.springframework.beans.factory.annotation.Value;
 
 /**
- * 
+ *
  * @author ed@anuff.com
  */
 @Path("/")
 @Component
 @Scope("singleton")
-@Produces({ MediaType.APPLICATION_JSON, "application/javascript",
-        "application/x-javascript", "text/ecmascript",
-        "application/ecmascript", "text/jscript" })
-public class  RootResource extends AbstractContextResource implements
+@Produces({MediaType.APPLICATION_JSON, "application/javascript",
+    "application/x-javascript", "text/ecmascript",
+    "application/ecmascript", "text/jscript"})
+public class RootResource extends AbstractContextResource implements
         MetricProcessor<RootResource.MetricContext> {
-    
+
     private String externalLoginService;
     private String authenticationHost;
-    
+
     @Value("#{properties['usergrid.authentication.externalloginservice']}")
     public void setExternalLoginService(String externalLoginService) {
         this.externalLoginService = externalLoginService;
     }
-    
+
     @Value("#{properties['usergrid.authentication.host']}")
-    public void setAuthenticationHost(String authenticationHost){
-        this.authenticationHost=authenticationHost;
+    public void setAuthenticationHost(String authenticationHost) {
+        this.authenticationHost = authenticationHost;
     }
 
     static final class MetricContext {
+
         final boolean showFullSamples;
         final ObjectNode objectNode;
 
@@ -166,12 +169,13 @@ public class  RootResource extends AbstractContextResource implements
             return response.build();
         }
     }
-    
+
     @GET
     @Path("externallogin")
-    public Response getExternalLogin() throws URISyntaxException{
-        return Response.temporaryRedirect(new URI(authenticationHost+"/login?service="+externalLoginService)).build();
+    public Response getExternalLogin() throws URISyntaxException {
+        return Response.status(302).header("Location", authenticationHost + "/login?service=" + externalLoginService).build();
     }
+
     @GET
     @Path("status")
     public JSONWithPadding getStatus(
@@ -189,17 +193,17 @@ public class  RootResource extends AbstractContextResource implements
         return new JSONWithPadding(response, callback);
     }
 
-  @GET
-  @Path("lb-status")
-  public Response getLbStatus() {
-    ResponseBuilder response;
-    if (usergridSystemMonitor.getIsCassandraAlive()) {
-      response = Response.noContent().status(Response.Status.OK);
-    } else {
-      response = Response.noContent().status(Response.Status.SERVICE_UNAVAILABLE);
+    @GET
+    @Path("lb-status")
+    public Response getLbStatus() {
+        ResponseBuilder response;
+        if (usergridSystemMonitor.getIsCassandraAlive()) {
+            response = Response.noContent().status(Response.Status.OK);
+        } else {
+            response = Response.noContent().status(Response.Status.SERVICE_UNAVAILABLE);
+        }
+        return response.build();
     }
-    return response.build();
-  }
 
     private void dumpMetrics(ObjectNode node) {
         MetricsRegistry registry = Metrics.defaultRegistry();
@@ -270,8 +274,7 @@ public class  RootResource extends AbstractContextResource implements
     public ApplicationResource getApplicationByUuids(
             @PathParam("organizationId") String organizationIdStr,
             @PathParam("applicationId") String applicationIdStr)
-
-    throws Exception {
+            throws Exception {
 
         UUID applicationId = UUID.fromString(applicationIdStr);
         UUID organizationId = UUID.fromString(organizationIdStr);
